@@ -34,7 +34,7 @@ namespace ReflectionToIL.Models
             il.Emit(OpCodes.Ldarg_0);
             il.Emit(OpCodes.Castclass, ownerType);
             il.Emit(OpCodes.Ldfld, Info);
-            il.Emit(OpCodes.Box, Info.FieldType);
+            if (Info.FieldType.IsValueType) il.Emit(OpCodes.Box, Info.FieldType);
             il.Emit(OpCodes.Ret);
 
             // Create the proper delegate type for the method

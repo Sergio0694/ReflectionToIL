@@ -44,7 +44,7 @@ namespace ReflectionToIL.Models
 
             // Get and box the target field
             il.Emit(OpCodes.Ldfld, Info);
-            il.Emit(OpCodes.Box, Info.FieldType);
+            if (Info.FieldType.IsValueType) il.Emit(OpCodes.Box, Info.FieldType);
             il.Emit(OpCodes.Ret);
 
             // Create the proper delegate type for the method
