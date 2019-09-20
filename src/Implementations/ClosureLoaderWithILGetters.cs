@@ -9,43 +9,51 @@ using ReflectionToIL.Models;
 
 namespace ReflectionToIL.Implementations
 {
-    public sealed class ClosureLoaderWithReflection
+    public sealed class ClosureLoaderWithILGetters
     {
-        private readonly IReadOnlyList<ClosureField> Fields;
+        private readonly IReadOnlyList<ClosureFieldWithGetter> Fields;
 
         private readonly int ReferenceCount;
 
         private readonly int ByteSize;
 
-        private ClosureLoaderWithReflection(IReadOnlyList<ClosureField> fields, int references, int bytes)
+        private ClosureLoaderWithILGetters(IReadOnlyList<ClosureFieldWithGetter> fields, int references, int bytes)
         {
             Fields = fields;
             ReferenceCount = references;
             ByteSize = bytes;
         }
 
-        public static ClosureLoaderWithReflection GetLoaderForDelegate(Delegate instance)
+        public static ClosureLoaderWithILGetters GetLoaderForDelegate(Delegate instance)
         {
-            IEnumerable<ClosureField> CollectFields(Type type, IReadOnlyList<FieldInfo> parents)
+            IEnumerable<ClosureFieldWithGetter> CollectFields(Type type, IReadOnlyList<ClosureFieldWithGetter> parents)
             {
                 foreach (FieldInfo field in type.GetFields())
                 {
                     if (field.Name.StartsWith("CS$<>"))
                     {
                         // Create a new list of parents including the current field
-                        IReadOnlyList<FieldInfo> updatedParents = parents.Concat(new[] { field }).ToList();
+                        ClosureFieldWithGetter parent = new ClosureFieldWithGetter(field, parents);
+                        IReadOnlyList<ClosureFieldWithGetter> updatedParents = parents.Append(parent).ToList();
 
                         foreach (var nested in CollectFields(field.FieldType, updatedParents))
                         {
                             yield return nested;
                         }
                     }
-                    else yield return new ClosureField(field, parents);
+                    else yield return new ClosureFieldWithGetter(field, parents);
                 }
             }
 
             // Explore the closure type, initially passing an empty array of parents
-            var fields = CollectFields(instance.Target.GetType(), Array.Empty<FieldInfo>()).ToArray();
+            var fields = CollectFields(instance.Target.GetType(), Array.Empty<ClosureFieldWithGetter>()).ToArray();
+
+            // Preload the dynamic getters
+            foreach (var field in fields)
+            {
+                foreach (var parent in field.Parents) parent.BuildDynamicGetter();
+                field.BuildDynamicGetter();
+            }
 
             // Calculate how many bytes we need
             int
@@ -57,7 +65,7 @@ namespace ReflectionToIL.Implementations
                 else referenceCount++;
             }
 
-            return new ClosureLoaderWithReflection(fields, referenceCount, byteSize);
+            return new ClosureLoaderWithILGetters(fields, referenceCount, byteSize);
         }
 
         public unsafe ClosureData GetData(Delegate instance)
@@ -73,8 +81,8 @@ namespace ReflectionToIL.Implementations
                 // Traverse the parents hierarchy
                 object target = instance.Target;
                 foreach (var parent in Fields[i].Parents)
-                    target = parent.GetValue(target);
-                object value = Fields[i].Info.GetValue(target);
+                    target = parent.Getter(target);
+                object value = Fields[i].Getter(target);
 
                 // We need to handle value types and objects differently
                 if (Fields[i].Info.FieldType.IsValueType)
