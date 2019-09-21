@@ -12,7 +12,7 @@ namespace ReflectionToIL.Implementations
 {
     public delegate void DataLoader(object instance, ref object r0, ref byte r1);
 
-    public sealed class ClosureLoaderWithSingleGetter
+    public sealed class ClosureLoaderWithSingleILGetter
     {
         private readonly int ReferenceCount;
 
@@ -20,14 +20,14 @@ namespace ReflectionToIL.Implementations
 
         private readonly DataLoader Loader;
 
-        private ClosureLoaderWithSingleGetter(int references, int bytes, DataLoader loader)
+        private ClosureLoaderWithSingleILGetter(int references, int bytes, DataLoader loader)
         {
             ReferenceCount = references;
             ByteSize = bytes;
             Loader = loader;
         }
 
-        public static ClosureLoaderWithSingleGetter GetLoaderForDelegate(Delegate instance)
+        public static ClosureLoaderWithSingleILGetter GetLoaderForDelegate(Delegate instance)
         {
             IEnumerable<ClosureField> CollectFields(Type type, IReadOnlyList<FieldInfo> parents)
             {
@@ -159,7 +159,7 @@ namespace ReflectionToIL.Implementations
             // Create the proper delegate type for the method
             DataLoader loader = (DataLoader)method.CreateDelegate(typeof(DataLoader));
 
-            return new ClosureLoaderWithSingleGetter(referenceOffset, byteOffset, loader);
+            return new ClosureLoaderWithSingleILGetter(referenceOffset, byteOffset, loader);
         }
 
         public unsafe ClosureData GetData(Delegate instance)
