@@ -68,23 +68,25 @@ namespace ReflectionToIL.Implementations
                 referenceOffset = 0, // Offset into the references array
                 byteOffset = 0;      // Offset into the bytes array 
 
-            for (int i = 0; i < Fields.Count; i++)
+            for (int i = 0; i < Fields.Count; i++) // Faster than foreach
             {
+                ClosureField field = Fields[i];
+
                 // Traverse the parents hierarchy
                 object target = instance.Target;
-                foreach (var parent in Fields[i].Parents)
-                    target = parent.GetValue(target);
-                object value = Fields[i].Info.GetValue(target);
+                for (int j = 0; j < field.Parents.Count; j++)
+                    target = field.Parents[i].GetValue(target);
+                object value = field.Info.GetValue(target);
 
                 // We need to handle value types and objects differently
-                if (Fields[i].Info.FieldType.IsValueType)
+                if (field.Info.FieldType.IsValueType)
                 {
                     // Pin the boxed value and get the source and destination references
                     GCHandle handle = GCHandle.Alloc(value, GCHandleType.Pinned);
                     void* p = handle.AddrOfPinnedObject().ToPointer();
                     ref byte source = ref Unsafe.AsRef<byte>(p);
                     ref byte destination = ref Unsafe.Add(ref bytes[0], byteOffset);
-                    int size = Marshal.SizeOf(Fields[i].Info.FieldType);
+                    int size = Marshal.SizeOf(field.Info.FieldType);
 
                     // Copy the raw data of the value type into our bytes buffer
                     Unsafe.CopyBlock(ref destination, ref source, (uint)size);

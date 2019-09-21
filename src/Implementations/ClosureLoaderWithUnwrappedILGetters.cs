@@ -76,18 +76,20 @@ namespace ReflectionToIL.Implementations
 
             for (int i = 0; i < Fields.Count; i++)
             {
+                ClosureFieldWithUnwrappedGetter field = Fields[i];
+
                 // Load the current field
-                object value = Fields[i].Getter(instance.Target);
+                object value = field.Getter(instance.Target);
 
                 // We need to handle value types and objects differently
-                if (Fields[i].Info.FieldType.IsValueType)
+                if (field.Info.FieldType.IsValueType)
                 {
                     // Pin the boxed value and get the source and destination references
                     GCHandle handle = GCHandle.Alloc(value, GCHandleType.Pinned);
                     void* p = handle.AddrOfPinnedObject().ToPointer();
                     ref byte source = ref Unsafe.AsRef<byte>(p);
                     ref byte destination = ref Unsafe.Add(ref bytes[0], byteOffset);
-                    int size = Marshal.SizeOf(Fields[i].Info.FieldType);
+                    int size = Marshal.SizeOf(field.Info.FieldType);
 
                     // Copy the raw data of the value type into our bytes buffer
                     Unsafe.CopyBlock(ref destination, ref source, (uint)size);
