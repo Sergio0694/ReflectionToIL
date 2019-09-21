@@ -72,7 +72,7 @@ namespace ReflectionToIL.Implementations
             byte[] bytes = ArrayPool<byte>.Shared.Rent(ByteSize);
             int
                 referenceOffset = 0, // Offset into the references array
-                byteOffset = 0;      // Offset into the bytes array 
+                byteOffset = 0;      // Offset into the bytes array
 
             for (int i = 0; i < Fields.Count; i++)
             {
