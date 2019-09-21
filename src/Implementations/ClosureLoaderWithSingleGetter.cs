@@ -162,18 +162,18 @@ namespace ReflectionToIL.Implementations
             return new ClosureLoaderWithSingleGetter(referenceOffset, byteOffset, loader);
         }
 
-        public ClosureData GetData(Delegate instance)
+        public unsafe ClosureData GetData(Delegate instance)
         {
             // Reference and byte array
-            object[] references = ArrayPool<object>.Shared.Rent(ReferenceCount);
+            object[] refs = ArrayPool<object>.Shared.Rent(ReferenceCount);
             byte[] bytes = ArrayPool<byte>.Shared.Rent(ByteSize);
-            ref object r0 = ref references[0];
-            ref byte r1 = ref bytes[0];
+            ref object r0 = ref refs.Length > 0 ? ref refs[0] : ref Unsafe.AsRef<object>(null);
+            ref byte r1 = ref bytes.Length > 0 ? ref bytes[0] : ref Unsafe.AsRef<byte>(null);
 
             // Invoke the dynamic method to extract the captured data
             Loader(instance.Target, ref r0, ref r1);
 
-            return new ClosureData(references, ReferenceCount, bytes, ByteSize);
+            return new ClosureData(refs, ReferenceCount, bytes, ByteSize);
         }
     }
 }
