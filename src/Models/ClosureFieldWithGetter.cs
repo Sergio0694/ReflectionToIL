@@ -5,12 +5,24 @@ using System.Reflection.Emit;
 
 namespace ReflectionToIL.Models
 {
+    /// <summary>
+    /// A simple model that wraps a <see cref="FieldInfo"/> instance and a list of its parents from a given root
+    /// </summary>
     public sealed class ClosureFieldWithGetter
     {
+        /// <summary>
+        /// The wrapped <see cref="FieldInfo"/> instance
+        /// </summary>
         public FieldInfo Info { get; }
 
+        /// <summary>
+        /// The list of <see cref="ClosureFieldWithGetter"/> values to traverse the closure class hierarchy and reach the target field
+        /// </summary>
         public IReadOnlyList<ClosureFieldWithGetter> Parents { get; }
 
+        /// <summary>
+        /// Gets or sets a <see cref="Func{T,TResult}"/> instance wrapping a dynamic method to read the field value
+        /// </summary>
         public Func<object, object> Getter { get; private set; }
 
         public ClosureFieldWithGetter(FieldInfo info, IReadOnlyList<ClosureFieldWithGetter> parents)
@@ -19,6 +31,9 @@ namespace ReflectionToIL.Models
             Parents = parents;
         }
 
+        /// <summary>
+        /// Preloads the dynamic method used to retrieve the value of the wrapped <see cref="FieldInfo"/> instance
+        /// </summary>
         public void BuildDynamicGetter()
         {
             // Create a new dynamic method

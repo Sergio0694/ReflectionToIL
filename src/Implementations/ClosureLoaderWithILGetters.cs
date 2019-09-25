@@ -9,12 +9,24 @@ using ReflectionToIL.Models;
 
 namespace ReflectionToIL.Implementations
 {
+    /// <summary>
+    /// A <see langword="class"/> that inspects a closure and loads fields with individual dynamic methods
+    /// </summary>
     public sealed class ClosureLoaderWithILGetters
     {
+        /// <summary>
+        /// The list of <see cref="ClosureField"/> instances mapping the captured variables in the current closure class
+        /// </summary>
         private readonly IReadOnlyList<ClosureFieldWithGetter> Fields;
 
+        /// <summary>
+        /// The number of captured variables of a reference type
+        /// </summary>
         private readonly int ReferenceCount;
 
+        /// <summary>
+        /// The size in bytes of all the captured variables of a value type
+        /// </summary>
         private readonly int ByteSize;
 
         private ClosureLoaderWithILGetters(IReadOnlyList<ClosureFieldWithGetter> fields, int references, int bytes)
@@ -24,6 +36,11 @@ namespace ReflectionToIL.Implementations
             ByteSize = bytes;
         }
 
+        /// <summary>
+        /// Creates a new <see cref="ClosureLoaderWithILGetters"/> instance after inspecting the given <see cref="Delegate"/>
+        /// </summary>
+        /// <param name="instance">The input <see cref="Delegate"/> instance to inspect</param>
+        /// <returns>A <see cref="ClosureLoaderWithILGetters"/> instance that can be used to load data from instances of the same closure class as the input</returns>
         public static ClosureLoaderWithILGetters GetLoaderForDelegate(Delegate instance)
         {
             IEnumerable<ClosureFieldWithGetter> CollectFields(Type type, IReadOnlyList<ClosureFieldWithGetter> parents)
@@ -68,6 +85,11 @@ namespace ReflectionToIL.Implementations
             return new ClosureLoaderWithILGetters(fields, referenceCount, byteSize);
         }
 
+        /// <summary>
+        /// Loads all the captured variables from a given closure class and returns them as a <see cref="ClosureData"/> instance
+        /// </summary>
+        /// <param name="instance">The input <see cref="Delegate"/> instance to load data from</param>
+        /// <returns>A <see cref="ClosureData"/> instance with the captured data</returns>
         public unsafe ClosureData GetData(Delegate instance)
         {
             object[] references = ArrayPool<object>.Shared.Rent(ReferenceCount);

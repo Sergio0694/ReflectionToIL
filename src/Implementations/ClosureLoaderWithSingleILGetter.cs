@@ -10,14 +10,32 @@ using ReflectionToIL.Models;
 
 namespace ReflectionToIL.Implementations
 {
+    /// <summary>
+    /// A custom <see langword="delegate"/> that takes an instance of a closure class and extracts all the captured variables
+    /// </summary>
+    /// <param name="instance">The closure class instance to read data from</param>
+    /// <param name="r0">A reference to an <see cref="object"/> array to load reference types</param>
+    /// <param name="r1">A reference to a <see cref="byte"/> array to serialize value types</param>
     public delegate void DataLoader(object instance, ref object r0, ref byte r1);
 
+    /// <summary>
+    /// A <see langword="class"/> that inspects a closure and loads fields with a single dynamic method doing all the work
+    /// </summary>
     public sealed class ClosureLoaderWithSingleILGetter
     {
+        /// <summary>
+        /// The number of captured variables of a reference type
+        /// </summary>
         private readonly int ReferenceCount;
 
+        /// <summary>
+        /// The size in bytes of all the captured variables of a value type
+        /// </summary>
         private readonly int ByteSize;
 
+        /// <summary>
+        /// The <see cref="DataLoader"/> instance to use to extract data from new closure instances
+        /// </summary>
         private readonly DataLoader Loader;
 
         private ClosureLoaderWithSingleILGetter(int references, int bytes, DataLoader loader)
@@ -27,6 +45,11 @@ namespace ReflectionToIL.Implementations
             Loader = loader;
         }
 
+        /// <summary>
+        /// Creates a new <see cref="ClosureLoaderWithSingleILGetter"/> instance after inspecting the given <see cref="Delegate"/>
+        /// </summary>
+        /// <param name="instance">The input <see cref="Delegate"/> instance to inspect</param>
+        /// <returns>A <see cref="ClosureLoaderWithSingleILGetter"/> instance that can be used to load data from instances of the same closure class as the input</returns>
         public static ClosureLoaderWithSingleILGetter GetLoaderForDelegate(Delegate instance)
         {
             IEnumerable<ClosureField> CollectFields(Type type, IReadOnlyList<FieldInfo> parents)
@@ -162,6 +185,11 @@ namespace ReflectionToIL.Implementations
             return new ClosureLoaderWithSingleILGetter(referenceOffset, byteOffset, loader);
         }
 
+        /// <summary>
+        /// Loads all the captured variables from a given closure class and returns them as a <see cref="ClosureData"/> instance
+        /// </summary>
+        /// <param name="instance">The input <see cref="Delegate"/> instance to load data from</param>
+        /// <returns>A <see cref="ClosureData"/> instance with the captured data</returns>
         public unsafe ClosureData GetData(Delegate instance)
         {
             // Reference and byte array

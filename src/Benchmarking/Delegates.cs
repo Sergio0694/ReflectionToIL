@@ -2,8 +2,14 @@
 
 namespace ReflectionToIL.Benchmarking
 {
+    /// <summary>
+    /// A <see langword="class"/> that exposes a series of delegates with associated closures
+    /// </summary>
     public static class Delegates
     {
+        /// <summary>
+        /// Gets a <see cref="Delegate"/> with an associated closure with just a few fields
+        /// </summary>
         public static Delegate Small
         {
             get
@@ -21,6 +27,9 @@ namespace ReflectionToIL.Benchmarking
             }
         }
 
+        /// <summary>
+        /// Gets a <see cref="Delegate"/> with a closure spanning two scopes, and 8 captured variables
+        /// </summary>
         public static Delegate Medium
         {
             get
@@ -44,6 +53,9 @@ namespace ReflectionToIL.Benchmarking
             }
         }
 
+        /// <summary>
+        /// Gets a <see cref="Delegate"/> with a closure spanning three scopes, and 14 captured variables
+        /// </summary>
         public static Delegate Large
         {
             get
