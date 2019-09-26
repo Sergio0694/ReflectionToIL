@@ -124,6 +124,7 @@ namespace ReflectionToIL.Implementations
                         il.Emit(OpCodes.Ldfld, member.Parents[i]);
                         il.EmitStoreLocal(map[member.Parents[i]]);
                         il.EmitLoadLocal(map[member.Parents[i]]);
+                        loaded.Add(i);
                     }
                 }
 
