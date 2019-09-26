@@ -118,13 +118,14 @@ namespace ReflectionToIL.Implementations
                     while (i > 0 && !loaded.Contains(map[member.Parents[i]])) i--;
 
                     // Load the local variables for all the parents of the current member
-                    if (i == 0) il.EmitLoadLocal(0);
+                    il.EmitLoadLocal(0);
                     for (; i < member.Parents.Count; i++)
                     {
+                        index = map[member.Parents[i]];
                         il.Emit(OpCodes.Ldfld, member.Parents[i]);
-                        il.EmitStoreLocal(map[member.Parents[i]]);
-                        il.EmitLoadLocal(map[member.Parents[i]]);
-                        loaded.Add(i);
+                        il.EmitStoreLocal(index);
+                        il.EmitLoadLocal(index);
+                        loaded.Add(index);
                     }
                 }
 
